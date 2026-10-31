@@ -1,0 +1,26 @@
+$ python monitor/sbund_feed.py --archiv raw/vmp_archiv.db --config configs/beispiel-geodaten-it.yaml --db raw/hits.db        (31.10.2026)
+12 Suchbegriffe (dedupliziert):
+  'geodaten': 2
+  'geoinformation': 4
+  'geoportal': 1
+  'geodateninfrastruktur': 0
+  'postgis': 0
+  'wfs': 1
+  'wms': 4
+  'inspire': 0
+  'fachdatenbank': 0
+  'datenimport': 0
+  'schnittstelle': 36
+  'open source': 2
+Feed: 50 Eintraege gesehen, 48 neu
+Archiv gesamt: 48
+  evergabede:37 · healyhudson:4 · eVergabe:2 · ai-ag-prod:1 · editor:1 · subreport:1 · subreport15:1 · vmp-bb:1
+
+beispiel-geodaten-it: 3 Treffer aus service.bund.de
+   [ 50] Geodaten-Import-Pipeline (WFS/CSV ? PostgreSQL)
+         Technische Hochschule Brandenburg | service.bund.de/vmp-bb
+   [ 20] Vermessungstechnische Straßenbefahrung 2027
+         Kommunalreferat, Recht und Verwaltung, Z | service.bund.de/ai-ag-prod
+   [ 30] Markterkundung - Beschaffung einer Open Source Software
+         NATO Communications and Information Agen | service.bund.de/editor
+   -> in hits.db aus diesem Kanal: 3

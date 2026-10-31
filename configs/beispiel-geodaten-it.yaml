@@ -1,0 +1,39 @@
+# Suchprofil (Beispiel): ein kleines IT-Büro für Geodaten in Berlin und Brandenburg.
+#
+# Ein Profil je Kunde. Der Monitor wertet jede Bekanntmachung gegen Region,
+# CPV-Codes und Suchbegriffe aus und vergibt eine Punktzahl. Was nicht passt,
+# fällt heraus; was nach Ausschluss klingt (z. B. Generalunternehmer gefordert),
+# bleibt sichtbar und wird markiert.
+mandant: beispiel-geodaten-it
+firma: Beispiel Geodaten-IT GmbH
+suchraum:
+  # NUTS-Regionen: DE3 Berlin, DE4 Brandenburg
+  regionen: [DE3, DE4]
+  # Ohne Leistungsort zählt der Sitz der Vergabestelle (sonst bundesweit)
+  ort_ersatz_vergabestelle: true
+  cpv_codes:
+    - "72000000"   # IT-Dienste (Präfix 72)
+    - "48600000"   # Datenbanksoftware
+    - "71354000"   # Kartierung
+    - "38221000"   # Geografische Informationssysteme (GIS)
+  freitext_muster:
+    # Nur zusammengesetzte Begriffe: "gis" allein trifft "Logistik", "Register" usw.
+    - geodaten
+    - geoinformation
+    - geoportal
+    - geodateninfrastruktur
+    - postgis
+    - wfs
+    - wms
+    - inspire
+    - fachdatenbank
+    - datenimport
+    - schnittstelle
+    - open source
+schwellen:
+  auftragswert_min: 0
+  auftragswert_max: null
+  # Frist kürzer als 7 Tage: zu knapp für ein Angebot, fällt heraus
+  vorlaufzeit_min_tage: 7
+ausschluss:
+  - generalunternehmer_pflicht

@@ -1,0 +1,26 @@
+{
+ "tag": "2026-10-31",
+ "werktag": false,
+ "mandanten": {
+  "beispiel-geodaten-it": {
+   "neu": 46,
+   "vergeben": 0,
+   "ohne_frist": 20,
+   "ohne_ort": 3,
+   "doe": 43,
+   "doe_ohne_plattform": 0,
+   "ankuendigungen": 4,
+   "radar_neu": 0
+  }
+ },
+ "kanaele": {
+  "Datenservice": 43,
+  "service.bund.de": 3,
+  "Vergabemarktplätze": 0
+ },
+ "paket_gestern_bytes": 751428,
+ "status": "ok",
+ "meldungen": [],
+ "verlauf_laeufe": 0,
+ "erzeugt": "2026-10-31T06:13:55+00:00"
+}

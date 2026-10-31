@@ -1,0 +1,198 @@
+# Vergabemarktplätze der Länder — Quellenliste für den unterschwelligen Kanal
+#
+# Erhoben am 21.08.2026 durch direkten Abruf der Plattformen (Softwarekennung über
+# Pfadsignatur und Seiteninhalt) und eine Vollsuche auf GovData, dem Katalog, in
+# dem Bund und Länder ihre offenen Daten führen.
+#
+# 🔑 DER BEFUND, der den Zuschnitt bestimmt:
+#    Die Landschaft ist **anbieterkonzentriert, nicht länderkonzentriert.**
+#    Drei Softwarefamilien decken praktisch alles ab. Damit ist die Frage nach
+#    einer Schnittstelle keine 16-fache, sondern eine 3-fache — und für eine der
+#    drei ist der Mechanismus bereits dokumentiert.
+#
+# Legende status:
+#   offen      = Daten sind heute abrufbar, ohne Rückfrage
+#   schalter   = Mechanismus dokumentiert, nur nicht freigeschaltet → Anfrage an
+#                die Verfahrensbetreuung der jeweiligen Installation
+#   unbekannt  = keine öffentliche Schnittstelle gefunden; ob eine existiert, ist
+#                eine Frage an den Anbieter. "Nicht gefunden" ist nicht "gibt es nicht".
+#   im_bund    = läuft bereits über den Datenservice, braucht keinen eigenen Kanal
+
+# --- HEUTE ABRUFBAR ---------------------------------------------------------
+# Sieben Endpunkte, alle unter Datenlizenz Deutschland Zero 2.0 (gemeinfrei,
+# gewerblich nutzbar, ohne Namensnennung). Tägliches ZIP, EU + national.
+# ⚠ Das Archiv wird nachts überschrieben — eine Historie entsteht erst ab dem
+#   Tag, an dem der Abruf läuft. Deshalb ist "später anschließen" nicht gratis.
+quellen:
+  - land: Nordrhein-Westfalen
+    name: Vergabemarktplatz NRW (Land)
+    software: cosinex
+    status: offen
+    url: "https://www.evergabe.nrw.de/VMPSatellite/opendata?id=0bb4c8bc-514f-49bf-a490-d93103c377f0"
+
+  - land: Nordrhein-Westfalen
+    name: Vergabe Metropole Ruhr
+    software: cosinex
+    status: offen
+    url: "https://www.vergabe.metropoleruhr.de/VMPSatellite/opendata?id=4985b1a5-d2e8-4611-a4c6-20694a130bb3"
+
+  - land: Nordrhein-Westfalen
+    name: VMP Rheinland
+    software: cosinex
+    status: offen
+    url: "https://www.vmp-rheinland.de/VMPSatellite/opendata?id=35eb26cf-9d6c-4780-903a-89059f382b03"
+
+  - land: Nordrhein-Westfalen
+    name: Bau- und Liegenschaftsbetrieb NRW
+    software: cosinex
+    status: offen
+    url: "https://evergabe.blb.nrw.de/Vergabe/opendata?id=f33b7b4a-082d-4bbb-b176-d8b4ebf75a51"
+
+  - land: Nordrhein-Westfalen
+    name: Vergabe Westfalen
+    software: cosinex
+    status: offen
+    url: "https://www.vergabe-westfalen.de/VMPSatellite/opendata?id=d5a5e23b-5059-4a2d-9c2f-409de53790f6"
+
+  - land: Nordrhein-Westfalen
+    name: Stadt Köln
+    software: cosinex
+    status: offen
+    url: "https://vergabe.stadt-koeln.de/VMPSatellite/opendata?id=f8f65333-9078-451c-8628-09376a7fbfcb"
+
+  - land: Nordrhein-Westfalen
+    name: Wirtschaftsregion Aachen
+    software: cosinex
+    status: offen
+    url: "https://www.vergaben-wirtschaftsregion-aachen.de/VMPSatellite/opendata?id=1ec5f6d2-e483-4de9-9d24-6517b091abb1"
+
+# --- EIN SCHALTER FEHLT, SONST NICHTS ---------------------------------------
+# cosinex-Installationen ohne konfigurierte Zugriffs-ID. Der Mechanismus steht in
+# cosinex' eigener Produktdoku: "Die ID muss von der jeweiligen Verfahrens-
+# betreuung der Installation konfiguriert werden." Also eine Anfrage, kein Bau.
+  - land: Brandenburg
+    name: Vergabemarktplatz Brandenburg
+    software: cosinex
+    status: schalter
+    basis: "https://vergabemarktplatz.brandenburg.de"
+    hinweis: >
+      robots.txt sagt "Disallow: /" für alle Agenten — die Plattform wird deshalb
+      nicht abgerufen. Der Open-Data-Weg ist der einzige saubere; dafür müsste die
+      Verfahrensbetreuung die Zugriffs-ID freischalten.
+
+  - land: Rheinland-Pfalz
+    name: Vergabemarktplatz Rheinland-Pfalz
+    software: cosinex
+    status: schalter
+    basis: "https://www.vergabe.rlp.de"
+    hinweis: >
+      Am 21.08. neu gefunden: dieselbe Software wie NRW und Brandenburg
+      (VMPCenter/VMPSatellite). /VMPSatellite/opendata leitet ohne ID auf die
+      Startseite um — der Endpunkt existiert, die ID ist nicht vergeben.
+
+  - land: überregional
+    name: Deutsches Vergabeportal (DTVP)
+    software: cosinex
+    status: schalter
+    basis: "https://www.dtvp.de"
+    hinweis: >
+      Kein Land, sondern cosinex' eigenes gehostetes Portal, das viele
+      Vergabestellen quer über die Länder nutzen. Wenn irgendwo ein einzelner
+      Schalter viel bewegt, dann hier — der Adressat wäre cosinex selbst.
+
+# --- ANBIETER UNBEKANNT VERMESSEN, SCHNITTSTELLE NICHT GEFUNDEN -------------
+# Für keine dieser Plattformen liegt ein Datensatz auf GovData, und keine
+# dokumentiert öffentlich eine Open-Data-Schnittstelle. Das ist ein "nicht
+# gefunden", kein "existiert nicht" — die Frage geht an den Anbieter, und weil
+# sich die Anbieter wiederholen, sind es wenige Fragen.
+  - land: Berlin
+    name: Vergabeplattform des Landes Berlin
+    software: RIB Software (RIB Tender / meinauftrag.rib.de)
+    status: unbekannt
+    basis: "https://www.berlin.de/vergabeplattform/"
+    hinweis: >
+      🔴 NICHT cosinex — der Schalter-Hebel greift hier nicht. robots.txt
+      "Disallow: /", wird deshalb nicht abgerufen.
+
+  - land: Baden-Württemberg
+    name: vergabe24
+    software: Administration Intelligence AG
+    status: unbekannt
+    basis: "https://www.vergabe24.de"
+
+  - land: Saarland
+    name: AI Vergabeplattform Saarland
+    software: Administration Intelligence AG
+    status: unbekannt
+    basis: "https://vergabe.saarland/NetServer/"
+    hinweis: >
+      Belegt an der Seite selbst: sie nennt "Administration Intelligence AG".
+      Damit ist die Pfadsignatur /NetServer/ dem Anbieter zugeordnet — und die
+      drei folgenden Länder tragen dieselbe Signatur.
+
+  - land: Hessen
+    name: Vergabeplattform Land Hessen
+    software: NetServer (Signatur wie Saarland)
+    status: unbekannt
+    basis: "https://vergabe.hessen.de/NetServer/"
+
+  - land: Sachsen
+    name: Vergabeplattform des Freistaates Sachsen
+    software: NetServer (Signatur wie Saarland)
+    status: unbekannt
+    basis: "https://www.evergabe.sachsen.de/NetServer/"
+
+  - land: Mecklenburg-Vorpommern
+    name: Vergabeportal MV
+    software: NetServer (Signatur wie Saarland)
+    status: unbekannt
+    basis: "https://vergabe.mv-regierung.de/NetServer/"
+
+  - land: Bayern
+    name: Vergabeplattform vergabe.bayern
+    software: nicht bestimmt
+    status: unbekannt
+    basis: "https://www.vergabe.bayern.de"
+
+  - land: Sachsen-Anhalt
+    name: eVergabe-Portal Sachsen-Anhalt
+    software: nicht bestimmt
+    status: unbekannt
+    basis: "https://evergabe.sachsen-anhalt.de/"
+
+  - land: Schleswig-Holstein
+    name: e-vergabe.SH
+    software: nicht bestimmt
+    status: unbekannt
+    basis: "https://www.e-vergabe-sh.de"
+
+  - land: Niedersachsen
+    name: Vergabeportal Niedersachsen
+    software: nicht bestimmt
+    status: unbekannt
+    basis: "https://vergabe.niedersachsen.de"
+    hinweis: "Antwortete beim Abruf am 21.08. nicht — erneut prüfen, nicht als 'gibt es nicht' werten."
+
+  - land: Hamburg
+    name: Vergabeportal Hamburg
+    software: nicht bestimmt
+    status: unbekannt
+    basis: null
+    hinweis: "Kandidaten-Adressen antworteten nicht; die richtige Adresse ist noch zu ermitteln."
+
+  - land: Thüringen
+    name: Vergabeplattform Thüringen
+    software: nicht bestimmt
+    status: unbekannt
+    basis: null
+    hinweis: "Kandidaten-Adressen antworteten nicht; die richtige Adresse ist noch zu ermitteln."
+
+# --- BRAUCHT KEINEN EIGENEN KANAL -------------------------------------------
+  - land: Bremen
+    name: Vergabe@Net Bremen
+    software: Administration Intelligence AG
+    status: im_bund
+    basis: "https://vergabe.bremen.de"
+    hinweis: >
+      Bremen liefert unterschwellig bereits an den Datenservice Öffentlicher
+      Einkauf — der Monitor hat diese Bekanntmachungen also schon.

@@ -1,0 +1,10 @@
+# Wöchentliche Pull Requests für Updates: Python-Pakete und GitHub Actions.
+# Jedes Update läuft vor dem Zusammenführen durch pruefen.sh.
+version: 2
+updates:
+  - package-ecosystem: pip
+    directory: /
+    schedule: {interval: weekly}
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: {interval: weekly}

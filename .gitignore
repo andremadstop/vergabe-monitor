@@ -1,0 +1,9 @@
+raw/
+reports/
+*.db
+__pycache__/
+.ruff_cache/
+.pytest_cache/
+.venv/
+.env
+sbom.cdx.json

@@ -1,0 +1,16 @@
+[tool.ruff]
+line-length = 110
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM", "S"]
+# S608: SQL nur aus festen Bausteinen, Werte immer als Parameter
+# S310: urlopen nur mit festen https-Adressen bzw. geprüftem Schema (siehe nosec-Stellen)
+ignore = ["S608", "S310", "SIM102"]  # SIM102: verschachtelte ifs tragen dort je einen eigenen Kommentar
+
+[tool.ruff.lint.per-file-ignores]
+"monitor/test_*.py" = ["S101", "E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["monitor"]
+python_files = ["test_*.py"]

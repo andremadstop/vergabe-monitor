@@ -1,0 +1,14 @@
+$ python monitor/vmp_opendata.py --quellen configs/plattformen.yaml --archiv raw/vmp_archiv.db \
+      --config configs/beispiel-geodaten-it.yaml --db raw/hits.db        (31.10.2026, 07:5x MEZ)
+Archiv vorher: 0 nationale Bekanntmachungen
+  Vergabemarktplatz NRW (Land)             628 national,   628 neu
+  Vergabe Metropole Ruhr                 FEHLER URLError: <urlopen error [Errno 111] Connection refused>
+  VMP Rheinland                            364 national,   364 neu
+  Bau- und Liegenschaftsbetrieb NRW        310 national,   310 neu
+  Vergabe Westfalen                      FEHLER URLError: <urlopen error [Errno 111] Connection refused>
+  Stadt Köln                             FEHLER URLError: <urlopen error [Errno 111] Connection refused>
+  Wirtschaftsregion Aachen                 163 national,   163 neu
+Archiv nachher: 1465 (+1465)
+
+beispiel-geodaten-it: 0 Treffer aus dem unterschwelligen Kanal
+Kontakte für Ankündigungen aus dem Datenservice: 0 ergänzt
