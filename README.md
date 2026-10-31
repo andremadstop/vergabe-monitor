@@ -2,7 +2,7 @@
 
 Findet öffentliche Ausschreibungen, die zu einem Unternehmen passen. Jeden Tag holt er die neuen Bekanntmachungen aus offenen Quellen, führt sie in ein gemeinsames Format zusammen, bewertet sie gegen ein Suchprofil und schreibt einen Bericht.
 
-Import-Kern des Vergabe-Monitors der Stiebitz Souverain Systems UG. Seit August 2026 läuft er täglich für mehrere Profile. Dieses Repository ist ein Auszug: Kundenprofile, Zustellung (Mail, Portal) und Auswertungen für Kunden gehören nicht dazu. Mit KI-Unterstützung geschrieben, von uns geprüft und betrieben.
+Import-Kern des Vergabe-Monitors der Stiebitz Souverain Systems UG. Seit August 2026 läuft er täglich für mehrere Profile: vom 21.08. bis 31.10.2026 an 71 Tagen 3.255 Treffer für 7 Profile ([Betriebsnachweis](beispielberichte/laeufe/2026-10-31-betrieb.txt)). Dieses Repository ist ein Auszug: Kundenprofile, Zustellung (Mail, Portal) und Auswertungen für Kunden gehören nicht dazu. Mit KI-Unterstützung geschrieben, von uns geprüft und betrieben.
 
 ## Quellen
 

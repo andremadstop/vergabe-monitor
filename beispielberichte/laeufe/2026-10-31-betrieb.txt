@@ -1,0 +1,11 @@
+Betriebsnachweis aus der Treffer-Datenbank des laufenden Monitors (31.10.2026)
+Nur Kennzahlen, ausgelesen ohne Schreibzugriff; Profile und Treffer bleiben beim Betreiber.
+
+erster Treffer 2026-08-21 08:54, letzter 2026-10-31 07:27 UTC
+3255 Treffer an 71 Tagen, 7 Profile
+  2026-08: Treffer an 11 Tagen (21. bis 31.08.), 782 Treffer
+  2026-09: Treffer an 30 Tagen, 885 Treffer
+  2026-10: Treffer an 30 Tagen, 1588 Treffer
+
+Die Zählung beginnt mit dem 21.08.2026: An diesem Tag bekam die Datenbank ihren heutigen
+Schlüssel (Treffer je Profil, siehe monitor/store.py).
