@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Vergabe-Monitor — Tageslauf gegen den Datenservice Öffentlicher Einkauf
+Vergabe-Monitor: Tageslauf gegen den Datenservice Öffentlicher Einkauf
 
 Zieht die offenen Bekanntmachungen des Datenservice Öffentlicher Einkauf
 (oeffentlichevergabe.de) für einen oder mehrere Tage, joint sie auf LOS-Ebene,
@@ -10,11 +10,11 @@ Kein Account, kein API-Key. Datenlizenz Deutschland 2.0 (Quellenangabe im Report
 Profil: configs/<profil>.yaml (Beispiel: configs/beispiel-geodaten-it.yaml)
 
 Grenzen (ehrlich):
-- Die exakte Angebotsfrist steht NICHT im CSV-Export, nur im vollen eForms-XML.
+- Die exakte Angebotsfrist steht nicht im CSV-Export, nur im vollen eForms-XML.
   Wir nehmen publicOpeningDate als Näherung ("Frist ≈ Öffnung") und markieren das.
 - Ausschluss-Erkennung (Rahmenvertrag/GU/Präqualifikation) ist Freitext-Heuristik
-  über die Beschreibung — sie irrt in beide Richtungen. Deshalb wird ausgeschlossenes
-  NICHT verworfen, sondern separat als "geflaggt" ausgewiesen (kein stiller Cap).
+  über die Beschreibung; sie irrt in beide Richtungen. Deshalb wird ausgeschlossenes
+  nicht verworfen, sondern separat als "geflaggt" ausgewiesen (kein stiller Cap).
 """
 
 from __future__ import annotations
@@ -23,6 +23,7 @@ import argparse
 import csv
 import datetime as dt
 import io
+import re
 import sys
 import urllib.error
 import urllib.request
@@ -36,7 +37,7 @@ except ImportError:
 
 API = "https://oeffentlichevergabe.de/api/notice-exports"
 ACCEPT_CSV_ZIP = "application/vnd.bekanntmachungsservice.csv.zip+zip"
-LIZENZ = "Datenlizenz Deutschland 2.0 — Quelle: Datenservice Öffentlicher Einkauf (oeffentlichevergabe.de)"
+LIZENZ = "Datenservice Öffentlicher Einkauf (oeffentlichevergabe.de), Datenlizenz Deutschland 2.0"
 
 # CSV-Feldgrößen können groß sein (lange Beschreibungstexte in purpose.csv)
 csv.field_size_limit(10_000_000)
@@ -130,10 +131,10 @@ def build_candidates(zip_path: Path) -> list[dict]:
     # UND je eine auf LOSEBENE (LOT-xxxx), oft mit identischem Titel. Die
     # Sammelzeile ist dann ein Duplikat der Losdaten → verwerfen, sobald das
     # Verfahren mindestens ein echtes Los hat. Verfahren ganz OHNE Lose behalten
-    # ihre ''-Zeile. (Echte Mehr-Los-Verfahren bleiben vollständig — jedes Los eigen.)
+    # ihre ''-Zeile. (Echte Mehr-Los-Verfahren bleiben vollständig, jedes Los eigen.)
     # Cross-notice-Dubletten (dieselbe Ausschreibung als Erst- + Änderungs-
-    # bekanntmachung, verschiedene noticeIdentifier) werden bewusst NICHT gemerged
-    # — das bräuchte den procedureIdentifier-Link und könnte echte Zweitverfahren
+    # bekanntmachung, verschiedene noticeIdentifier) werden bewusst nicht gemerged.
+    # Das bräuchte den procedureIdentifier-Link und könnte echte Zweitverfahren
     # verstecken (Phase-2-Verfeinerung über changes.csv).
     notices_with_lots = {
         _key(p) for p in purpose if (p.get("lotIdentifier") or "").strip()
@@ -207,13 +208,13 @@ EXCLUSION_PATTERNS = {
 
 
 # Bekanntmachungsarten, hinter denen keine offene Ausschreibung mehr steht.
-# 🔴 Befund 16.10.2026: build_candidates nimmt JEDE Bekanntmachung des Tagespakets,
-#    also auch Zuschlaege (result), Vertragsaenderungen (cont-modif) und
-#    Direktvergaben (dir-awa-pre). Im September waren das in zwei Profilen 60 von
-#    197 und 245 von 587 Treffern -- sie standen als Ausschreibungen ohne Frist
-#    in der Liste. Vergebene Auftraege gehoeren in eine eigene Zuschlagsauswertung,
-#    nicht in die Trefferliste.
-#    Kanaele ohne formType (service.bund.de, Vergabemarktplaetze) sind nicht betroffen.
+# Befund 16.10.2026: build_candidates nimmt jede Bekanntmachung des Tagespakets,
+# also auch Zuschläge (result), Vertragsänderungen (cont-modif) und
+# Direktvergaben (dir-awa-pre). Im September waren das in zwei Profilen 60 von
+# 197 und 245 von 587 Treffern; sie standen als Ausschreibungen ohne Frist in
+# der Liste. Vergebene Aufträge gehören in eine eigene Zuschlagsauswertung,
+# nicht in die Trefferliste. Kanäle ohne formType (service.bund.de,
+# Vergabemarktplätze) sind nicht betroffen.
 VERGEBEN_FORMTYPEN = {"result", "cont-modif", "dir-awa-pre"}
 
 
@@ -225,6 +226,38 @@ def ist_ex_post(verfahrensart: str | None) -> bool:
     Interesse anmelden kann -- gerade die kleinen Auftraege."""
     v = (verfahrensart or "").strip().lower()
     return v.startswith("ex post") or "vergebener auftr" in v
+
+
+# Vergebenes am Titel (03.11.2026). Vergabemarktplaetze (cosinex) veroeffentlichen
+# die Ex-post-Transparenz nach UVgO/VOB oft als gewoehnliche Bekanntmachung
+# (formType competition, noticeType cn-standard) und schreiben das Vergebene nur in
+# den Titel: "Vergebener Auftrag: Restaurierung Skulptur". Gemessen im Halbjahr
+# 01.05.-02.11.2026: 1.132 solche Lose mit formType competition, in 13 Profilen
+# als offene Treffer durchgerutscht. Verankert am Titelanfang, damit ein Satz wie
+# "... ersetzt den vergebenen Auftrag von 2019" nicht greift. "Information ueber
+# beabsichtigte ..." bleibt: das ist ex ante, wie bei ist_ex_post().
+VERGEBEN_TITEL = re.compile(
+    r"^\W*(?:vergebene[nr]?\s+auftr"
+    r"|(?:bekanntmachung|info(?:rmation)?\s+(?:über|ueber))\s+(?:die\s+|den\s+)?vergebene"
+    r"|ex[\s-]*post\b"
+    # „Information nach § 20 Abs. 3 VOB/A (bzw. § 30 UVgO) über die Erteilung eines
+    # Auftrages, …“: die vorgeschriebene Ex-post-Information (gefunden 03.11. im
+    # service.bund.de-Feed und 11× als competition im Datenservice).
+    r"|information\s+(?:nach|gem(?:äß|aess|\.))\s+§[^,]{0,40}?über\s+die\s+erteilung)",
+    re.IGNORECASE,
+)
+
+
+def ist_vergeben_am_titel(titel: str | None) -> bool:
+    return bool(VERGEBEN_TITEL.match(titel or ""))
+
+
+def ist_schon_vergeben(k: dict) -> bool:
+    """Eine Regel für alle Stellen, die Vergebenes erkennen müssen (match(),
+    waechter.py; das Portal hat dieselbe Regel in treffer.schon_vergeben)."""
+    return (k.get("form_type") in VERGEBEN_FORMTYPEN
+            or ist_ex_post(k.get("procedure_type"))
+            or ist_vergeben_am_titel(k.get("title")))
 
 
 def _norm_name(s: str) -> str:
@@ -256,14 +289,130 @@ def auftraggeber_treffer(cand: dict, liste: list) -> str | None:
     return None
 
 
+# --------------------------------------------------------------------------- #
+# Stufen und Kontext (opt-in, 03.11.2026, erstes Profil: ein Restaurierungsbetrieb)
+# --------------------------------------------------------------------------- #
+# Ein Profil mit `stufen` teilt seine Treffer in Stufen (z. B. Kern / Lückenfüller /
+# Rand). Je Stufe zählen `muster` und `cpv` allein, `regeln` nur mit einem Wort aus
+# einer Kontextliste (`kontext.<name>`) im Umkreis von `kontext.fenster_zeichen`
+# Zeichen. So zählt „Kopie“ nur neben „Skulptur“ und nicht beim Kopierpapier.
+# `cpv_nur_mit_kontext: <liste>` lässt den CPV-Treffer einer Stufe nur gelten, wenn
+# irgendwo im Text ein Wort der Liste steht. `auftraggeber_ohne_muster: true` nimmt
+# Treffer, die nur über `suchraum.auftraggeber` kamen, in diese Stufe auf.
+# Die erste Stufe, die greift, gewinnt. Greift keine, ist es kein Treffer.
+# Profile ohne `stufen` laufen exakt wie vorher (Regressionstest 03.11.2026).
+
+def _kontext_woerter(cfg: dict, namen) -> list[str]:
+    kontext = cfg.get("kontext") or {}
+    namen = namen if isinstance(namen, list) else [namen]
+    woerter = []
+    for n in namen:
+        if n not in kontext or not isinstance(kontext[n], list):
+            raise ValueError(f"Profil: Kontextliste '{n}' fehlt unter `kontext`")
+        woerter += [str(w).lower() for w in kontext[n]]
+    return woerter
+
+
+def _stufen_suchraum(cfg: dict) -> tuple[list[str], list[str]]:
+    """Alle Wörter und CPV, die einen Kandidaten überhaupt erst in die Prüfung
+    bringen: suchraum + Stufen-Muster + Regelwörter + Stufen-CPV. Liest cfg nur
+    und ändert es nicht."""
+    sr = cfg.get("suchraum", {})
+    alle = [str(m).lower() for m in sr.get("freitext_muster", [])]
+    cpv = [str(c) for c in sr.get("cpv_codes", [])]
+    for s in cfg.get("stufen") or []:
+        alle += [str(w).lower() for w in s.get("muster", [])]
+        for r in s.get("regeln", []):
+            alle += [str(w).lower() for w in r.get("woerter", [])]
+        cpv += [str(c) for c in s.get("cpv", [])]
+    return sorted(set(alle)), sorted(set(cpv))
+
+
+def suchwoerter(cfg: dict) -> list[str]:
+    """Die Wörter, auf die match() für dieses Profil überhaupt anspricht (klein).
+    Ohne Stufen `freitext_muster`, mit Stufen zusätzlich Stufen-Muster und
+    Regelwörter. Für Kanäle, die vor match() grob vorsortieren (sbund_feed)."""
+    if cfg.get("stufen"):
+        return _stufen_suchraum(cfg)[0]
+    return [str(m).lower() for m in cfg.get("suchraum", {}).get("freitext_muster", [])]
+
+
+def such_cpv(cfg: dict) -> list[str]:
+    """Wie suchwoerter(), für CPV: ohne Stufen `cpv_codes`, mit Stufen zusätzlich
+    die CPV der Stufen."""
+    if cfg.get("stufen"):
+        return _stufen_suchraum(cfg)[1]
+    return [str(c) for c in cfg.get("suchraum", {}).get("cpv_codes", [])]
+
+
+def _kontext_im_fenster(text: str, wort: str, kontext: list[str], fenster: int) -> str | None:
+    """Erstes Kontextwort im Umkreis eines Vorkommens von `wort`. Die Fundstelle
+    selbst zählt nicht mit (sonst wäre „Skulptur“ ihr eigener Kontext)."""
+    i = text.find(wort)
+    while i >= 0:
+        umkreis = (text[max(0, i - fenster):i] + " | "
+                   + text[i + len(wort):i + len(wort) + fenster])
+        for k in kontext:
+            if k in umkreis:
+                return k
+        i = text.find(wort, i + 1)
+    return None
+
+
+def stufe_bestimmen(cand: dict, cfg: dict, text: str, nur_auftraggeber: bool) -> dict | None:
+    """Stufe eines Kandidaten nach `cfg['stufen']`, oder None, wenn keine greift.
+    Rückgabe: {stufe, name, grund}."""
+    fenster = int((cfg.get("kontext") or {}).get("fenster_zeichen", 150))
+    for s in cfg.get("stufen") or []:
+        mu = [w for w in (str(x).lower() for x in s.get("muster", [])) if w in text]
+        pref = _cpv_prefixes(s.get("cpv", []))
+        ch = sorted(c for c in cand["cpv"] if any(c.startswith(p) for p in pref))
+        if ch and s.get("cpv_nur_mit_kontext"):
+            if not any(w in text for w in _kontext_woerter(cfg, s["cpv_nur_mit_kontext"])):
+                ch = []
+        regel = None
+        for r in s.get("regeln", []):
+            ctx = _kontext_woerter(cfg, r.get("kontext"))
+            for w in (str(x).lower() for x in r.get("woerter", [])):
+                if w in text:
+                    k = _kontext_im_fenster(text, w, ctx, fenster)
+                    if k:
+                        regel = f"{w.strip()} + Kontext '{k.strip()}'"
+                        break
+            if regel:
+                break
+        if mu or ch or regel:
+            teile = []
+            if mu:
+                teile.append("Muster " + ", ".join(mu))
+            if ch:
+                teile.append("CPV " + ", ".join(ch))
+            if regel:
+                teile.append(regel)
+            return {"stufe": s.get("stufe"), "name": s.get("name", ""),
+                    "grund": "; ".join(teile)}
+    if nur_auftraggeber:
+        for s in cfg.get("stufen") or []:
+            if s.get("auftraggeber_ohne_muster"):
+                return {"stufe": s.get("stufe"), "name": s.get("name", ""),
+                        "grund": "nur über den Auftraggeber (CPV passt)"}
+    return None
+
+
 def match(cand: dict, cfg: dict) -> dict:
     """Bewertet einen Kandidaten gegen die Config.
-    Rückgabe: dict mit hit(bool), reasons(list), flags(list), score(int)."""
+    Rückgabe: dict mit hit(bool), reasons(list), flags(list), score(int);
+    bei Profilen mit `stufen` zusätzlich stufe, stufe_name, stufe_grund."""
     sr = cfg.get("suchraum", {})
     schwellen = cfg.get("schwellen", {})
     regionen = [r.upper() for r in sr.get("regionen", [])]
-    cpv_prefixes = _cpv_prefixes(sr.get("cpv_codes", []))
-    muster = [m.lower() for m in sr.get("freitext_muster", [])]
+    stufen = cfg.get("stufen") or []
+    if stufen:
+        muster, cpv_alle = _stufen_suchraum(cfg)
+        cpv_prefixes = _cpv_prefixes(cpv_alle)
+    else:
+        cpv_prefixes = _cpv_prefixes(sr.get("cpv_codes", []))
+        muster = [m.lower() for m in sr.get("freitext_muster", [])]
     ausschluss_cfg = set(cfg.get("ausschluss", []))
     # Opt-in (22.10.2026): Höchstwert und Ausschlüsse verwerfen statt nur
     # zu flaggen. Bewusst kein neuer Standard -- bereits kalibrierte Profile
@@ -280,6 +429,9 @@ def match(cand: dict, cfg: dict) -> dict:
                 "reject": "schon vergeben ("
                           f"{cand.get('notice_type') or cand.get('form_type')
                              or cand.get('procedure_type')})"}
+    if ist_vergeben_am_titel(cand.get("title")):
+        return {"hit": False, "reasons": [], "flags": [], "score": 0,
+                "reject": "schon vergeben (Titel)"}
 
     # --- Region (hartes Kriterium, aber Ort-unbekannt wird nicht verworfen) ---
     nuts = cand["nuts"].upper()
@@ -311,14 +463,20 @@ def match(cand: dict, cfg: dict) -> dict:
     # --- CPV (Losebene) ---
     cpv_hits = sorted(c for c in cand["cpv"]
                       if any(c.startswith(pref) for pref in cpv_prefixes))
-    if cpv_hits:
+    # Mit Stufen erklärt die Stufen-Begründung CPV und Muster; beides hier noch einmal
+    # aufzuführen, stand im Bericht doppelt da („Stufe 2: CPV 45262511; …; CPV 45262511“).
+    if cpv_hits and not stufen:
         reasons.append("CPV " + ", ".join(cpv_hits))
         score += 50
 
     # --- Freitext ---
     text_hits = [m for m in muster if m in text]
     if text_hits:
-        reasons.append("Muster: " + ", ".join(text_hits))
+        # Mit Stufen steht das in der Stufen-Begründung (s. o.), dort auch die
+        # kontextpflichtigen Wörter mit ihrem Kontext. „Muster: kopie“ hier läse sich
+        # wie ein Treffer über das Wort allein.
+        if not stufen:
+            reasons.append("Muster: " + ", ".join(text_hits))
         score += 30
 
     # --- Auftraggeber (optional, suchraum.auftraggeber) ---
@@ -331,6 +489,16 @@ def match(cand: dict, cfg: dict) -> dict:
     if not cpv_hits and not text_hits and not ag:
         return {"hit": False, "reasons": [], "flags": [], "score": 0,
                 "reject": "kein CPV-/Freitext-Treffer"}
+
+    # --- Stufe (nur Profile mit `stufen`) ---
+    stufe = None
+    if stufen:
+        stufe = stufe_bestimmen(cand, cfg, text, nur_auftraggeber=bool(ag))
+        if stufe is None:
+            return {"hit": False, "reasons": [], "flags": [], "score": 0,
+                    "reject": "keine Stufe greift (mehrdeutiges Wort ohne Kontext "
+                              "oder CPV ohne Kontextwort)"}
+        reasons.insert(0, f"Stufe {stufe['stufe']}: {stufe['grund']}")
 
     # --- Wert ---
     val_min = schwellen.get("auftragswert_min")
@@ -364,7 +532,49 @@ def match(cand: dict, cfg: dict) -> dict:
                         "reject": f"Ausschluss {key} (Freitext '{pat}')"}
             flags.append(f"⚠ Ausschluss-Verdacht: {key} (Freitext '{pat}')")
 
-    return {"hit": True, "reasons": reasons, "flags": flags, "score": score}
+    m = {"hit": True, "reasons": reasons, "flags": flags, "score": score}
+    if stufe:
+        m.update(stufe=stufe["stufe"], stufe_name=stufe["name"], stufe_grund=stufe["grund"])
+    return m
+
+
+def treffer_uebernehmen(cand: dict, m: dict) -> None:
+    """Hängt `_m` an den Kandidaten und kopiert die Stufe in eigene Felder.
+    store.record_hits speichert das Kandidaten-JSON und lässt `_m` fallen; was
+    nur in `_m` steht, erreicht weder die Datenbank noch das Portal."""
+    cand["_m"] = m
+    if m.get("stufe") is not None:
+        cand["stufe"] = m["stufe"]
+        cand["stufe_name"] = m.get("stufe_name", "")
+        cand["stufe_grund"] = m.get("stufe_grund", "")
+
+
+def frist_knapp(cand: dict, cfg: dict) -> str | None:
+    """Markiert eine kurze Frist, statt sie zu verwerfen (opt-in, 03.11.2026).
+
+    Schalter `schwellen.vorlaufzeit_markieren: true` zusammen mit
+    `vorlaufzeit_min_tage`. Gemessen wird der Vorlauf ab Veröffentlichung
+    (`pub_date`, sonst Export-Tag), nicht ab heute: Der Treffer bleibt im Portal
+    stehen, und ein Merkmal, das sich jeden Tag ändert, hilft dort nicht. Ohne
+    bekannte Frist kein Flag. Läuft nach dem eForms-Nachladen, vorher fehlt die
+    Frist bei drei von vier Treffern. Mit `als_filter` verwirft zu_knapp() wie bisher.
+    """
+    schw = cfg.get("schwellen") or {}
+    tage = schw.get("vorlaufzeit_min_tage")
+    if not schw.get("vorlaufzeit_markieren") or not tage:
+        return None
+    roh = str(cand.get("angebotsfrist") or cand.get("opening") or "").strip()
+    basis = str(cand.get("pub_date") or cand.get("_pubday") or "").strip()
+    try:
+        frist = dt.date.fromisoformat(roh[:10])
+        ab = dt.date.fromisoformat(basis[:10])
+    except ValueError:
+        return None
+    vorlauf = (frist - ab).days
+    if vorlauf >= int(tage):
+        return None
+    return (f"Frist unter {int(tage)} Tagen: {frist.isoformat()}, "
+            f"{vorlauf} Tage nach Veröffentlichung")
 
 
 # --------------------------------------------------------------------------- #
@@ -401,6 +611,10 @@ def render_report(hits: list[dict], days: list[str], stats: dict, cfg: dict) -> 
     mandant = cfg.get("mandant", "?")
     firma = cfg.get("firma", "?")
     hits = sorted(hits, key=lambda h: h["_m"]["score"], reverse=True)
+    # Profile mit Stufen: Stufe 1 zuerst, innerhalb der Stufe nach Score.
+    mit_stufen = any(h["_m"].get("stufe") is not None for h in hits)
+    if mit_stufen:
+        hits = sorted(hits, key=lambda h: (h["_m"].get("stufe") is None, h["_m"].get("stufe") or 0))
     L = []
     L.append(f"# Vergabe-Monitor — {firma} ({mandant})")
     L.append("")
@@ -414,14 +628,25 @@ def render_report(hits: list[dict], days: list[str], stats: dict, cfg: dict) -> 
     L.append("⚠ Radar nur für **förmliche Verfahren**. Direktaufträge < 100.000 € "
              "erscheinen oft gar nicht öffentlich — dieser Report sieht sie nicht.")
     L.append("")
+    if mit_stufen:
+        namen: dict = {}
+        for s in cfg.get("stufen") or []:
+            namen[s.get("stufe")] = s.get("name", "")
+        for nr, name in namen.items():
+            n = sum(1 for h in hits if h["_m"].get("stufe") == nr)
+            L.append(f"- Stufe {nr} ({name}): **{n}**")
+        L.append("")
     if not hits:
         L.append("_Keine Treffer. Filter ggf. zu eng — Trefferlog unten prüfen._")
     for h in hits:
         c, m = h, h["_m"]
         frist = c["opening"][:16].replace("T", " ") if c["opening"] else "—"
         L.append("---")
-        L.append(f"### {c['title'] or '(ohne Titel)'}  ·  Score {m['score']}")
+        stufe_vorsatz = f"[Stufe {m['stufe']}] " if m.get("stufe") is not None else ""
+        L.append(f"### {stufe_vorsatz}{c['title'] or '(ohne Titel)'}  ·  Score {m['score']}")
         L.append("")
+        if m.get("stufe") is not None:
+            L.append(f"- **Stufe:** {m['stufe']} · {m.get('stufe_name', '')}")
         L.append(f"- **Vergabestelle:** {c['buyer'] or '—'}"
                  + (f"  ·  {c['buyer_url']}" if c["buyer_url"] else ""))
         L.append(f"- **Ort:** {c['city']} {c['plz']} ({c['nuts']})")
@@ -490,7 +715,7 @@ def main() -> int:
         for c in cands:
             m = match(c, cfg)
             if m["hit"]:
-                c["_m"] = m
+                treffer_uebernehmen(c, m)
                 c["_pubday"] = day       # Export-Tag (≠ pub_date!) für enrich/store
                 all_hits.append(c)
                 day_hits += 1
@@ -511,7 +736,7 @@ def main() -> int:
         for c in all_hits:
             try:
                 zusatz = enrich.from_eforms(c.get("notice_id", ""), c["_pubday"], args.raw)
-            except Exception as ex:  # noqa: BLE001 — die Frist ist Kuer, der Lauf darf nie daran scheitern
+            except Exception as ex:  # noqa: BLE001 -- die Frist ist Kuer, der Lauf darf nie daran scheitern
                 print(f"  [frist] {c.get('notice_id','?')[:8]}: {ex}", file=sys.stderr)
                 continue
             if zusatz.get("angebotsfrist"):
@@ -530,6 +755,13 @@ def main() -> int:
         all_hits = [c for c in all_hits if not zu_knapp(c, cfg, heute)]
         print(f"  Vorlaufzeit: {len(knapp)} Treffer mit Frist unter "
               f"{cfg['schwellen']['vorlaufzeit_min_tage']} Tagen verworfen", file=sys.stderr)
+
+    # Kurze Fristen markieren statt verwerfen (opt-in: schwellen.vorlaufzeit_markieren)
+    for c in all_hits:
+        hinweis = frist_knapp(c, cfg)
+        if hinweis:
+            c["frist_knapp"] = hinweis      # ins Kandidaten-JSON, siehe treffer_uebernehmen
+            c["_m"]["flags"].append("⚠ " + hinweis)
 
     stats = {
         "now": dt.datetime.now().strftime("%Y-%m-%d %H:%M"),

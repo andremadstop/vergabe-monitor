@@ -1,49 +1,47 @@
 #!/usr/bin/env python3
 """
-Vergabe-Monitor — unterschwelliger Kanal aus den Vergabemarktplaetzen der Laender
+Vergabe-Monitor: unterschwelliger Kanal aus den Vergabemarktplaetzen der Laender
 
-Der Datenservice Oeffentlicher Einkauf fuehrt unterschwellig nur, was eine
-Vergabestelle **zusaetzlich freiwillig** dorthin stellt. Wer nur auf dem
-Marktplatz seines Landes veroeffentlicht, fehlt. Dieses Modul holt genau die.
+Der Datenservice Öffentlicher Einkauf führt unterschwellig nur, was eine
+Vergabestelle zusätzlich freiwillig dorthin stellt. Wer nur auf dem Marktplatz
+seines Landes veröffentlicht, fehlt. Dieses Modul holt genau die.
 
 Gemessen im August 2026: von 17 passenden NRW-Verfahren hatte der Datenservice eines.
 
-QUELLEN stehen in configs/plattformen.yaml, nicht hier im Code. Ein weiteres Land
-ist dann eine Zeile in einer Datei -- und die Datei sagt zugleich, welche Laender
-**nicht** gehen und warum. Heute liefert nur NRW (7 Endpunkte, cosinex,
+Die Quellen stehen in configs/plattformen.yaml, nicht hier im Code. Ein weiteres
+Land ist dann eine Zeile in einer Datei, und die Datei sagt zugleich, welche
+Länder nicht gehen und warum. Heute liefert nur NRW (7 Endpunkte, cosinex,
 Datenlizenz Deutschland Zero 2.0).
 
-DREI ENTSCHEIDUNGEN, die den Aufbau erklaeren
-─────────────────────────────────────────────
-1. **Das Rohmaterial wird archiviert, nicht nur die Treffer.**
-   Das cosinex-ZIP wird jede Nacht neu erzeugt und das des Vortages geloescht.
-   Wer nur speichert, was heute auf die Kriterien passt, verliert jede spaetere
-   Kalibrierung rueckwirkend -- und die Kriterien sind ausdruecklich noch nicht
-   endgueltig abgestimmt. Deshalb landet jede nationale
-   Bekanntmachung im Archiv, und gefiltert wird daraus.
+Drei Entscheidungen, die den Aufbau erklären:
 
-2. **Gematcht wird mit `vergabe_monitor.match()`, nicht mit eigener Logik.**
-   Zwei Matcher waeren zwei Wahrheiten. Dass die Quelle ein anderes XML-Format
-   hat, ist eine Frage der Abbildung, nicht der Bewertung.
+1. Das Rohmaterial wird archiviert, nicht nur die Treffer. Das cosinex-ZIP wird
+   jede Nacht neu erzeugt und das des Vortages gelöscht. Wer nur speichert, was
+   heute auf die Kriterien passt, verliert jede spätere Kalibrierung rückwirkend,
+   und die Kriterien sind ausdrücklich noch nicht endgültig abgestimmt. Deshalb
+   landet jede nationale Bekanntmachung im Archiv, und gefiltert wird daraus.
 
-3. **Die Herkunft steht im Kandidaten-JSON, nicht in einer neuen Spalte.**
-   `store.record_hits` legt den vollstaendigen Kandidaten als JSON ab; ein Feld
-   `quelle` reist damit mit, ohne die laufende hits.db zu veraendern. Ein
-   Schemaeingriff waere Risiko ohne Gegenwert.
+2. Gematcht wird mit `vergabe_monitor.match()`, nicht mit eigener Logik. Zwei
+   Matcher wären zwei Wahrheiten. Dass die Quelle ein anderes XML-Format hat,
+   ist eine Frage der Abbildung, nicht der Bewertung.
 
-🔴 DIE FALLE, die diesen Kanal gefaehrlich macht: DER ORT
-────────────────────────────────────────────────────────
-Die nationalen cosinex-XML enthalten **keinen einzigen NUTS-Code** -- nachgezaehlt
-an allen 613 NRW-Bekanntmachungen vom 21.08.2026. Der Regionsfilter des Monitors
-arbeitet aber auf NUTS, und er verwirft einen Treffer mit unbekanntem Ort
-**nicht** (bewusst so, siehe match()). Ohne Umrechnung liefen also saemtliche
-NRW-Verfahren als "Ort unbekannt" durch einen Brandenburg-Filter.
+3. Die Herkunft steht im Kandidaten-JSON, nicht in einer neuen Spalte.
+   `store.record_hits` legt den vollständigen Kandidaten als JSON ab; ein Feld
+   `quelle` reist damit mit, ohne die laufende hits.db zu verändern. Ein
+   Schemaeingriff wäre Risiko ohne Gegenwert.
 
-Aufgeloest wird das ueber die PLZ (in 95 % der Faelle vorhanden) gegen die
-OpenPLZ-API, die den amtlichen Landesschluessel liefert. Und zwar mit einer
-Vorsichtsregel: **verworfen wird nur bei eindeutiger Zuordnung.** Traegt eine PLZ
-Orte in mehreren Laendern, bleibt der Treffer drin und wird markiert. Lieber ein
-Treffer zu viel mit Hinweis als einer zu wenig ohne.
+Der heikle Punkt dieses Kanals ist der Ort. Die nationalen cosinex-XML enthalten
+keinen einzigen NUTS-Code, nachgezählt an allen 613 NRW-Bekanntmachungen vom
+21.08.2026. Der Regionsfilter des Monitors arbeitet aber auf NUTS, und er
+verwirft einen Treffer mit unbekanntem Ort nicht (bewusst so, siehe match()).
+Ohne Umrechnung liefen also sämtliche NRW-Verfahren als "Ort unbekannt" durch
+einen Brandenburg-Filter.
+
+Aufgelöst wird das über die PLZ (in 95 % der Fälle vorhanden) gegen die
+OpenPLZ-API, die den amtlichen Landesschlüssel liefert, mit einer Vorsichtsregel:
+Verworfen wird nur bei eindeutiger Zuordnung. Trägt eine PLZ Orte in mehreren
+Ländern, bleibt der Treffer drin und wird markiert. Lieber ein Treffer zu viel
+mit Hinweis als einer zu wenig ohne.
 
 Aufruf:
     vmp_opendata.py --quellen configs/plattformen.yaml \\
@@ -75,7 +73,7 @@ from defusedxml import DefusedXmlException
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import store  # noqa: E402
-from vergabe_monitor import match  # noqa: E402
+from vergabe_monitor import match, such_cpv, suchwoerter, treffer_uebernehmen  # noqa: E402
 
 OPENPLZ = "https://openplzapi.org/de/"
 UA = {"User-Agent": "vergabe-monitor/1.0 (+https://github.com/andremadstop/vergabe-monitor)"}
@@ -178,14 +176,14 @@ def ort_laender(c: sqlite3.Connection, plz: str, ort: str) -> list[str]:
     """NUTS-1-Codes eines Leistungsorts. Mehr als einer = mehrdeutig (dann wird
     nicht verworfen). Leere Liste = nicht aufloesbar (dann auch nicht).
 
-    🔴 Zwei Wege, und der zweite ist keine Bequemlichkeit:
-    Die PLZ allein reicht nicht. **Grosskunden-Postleitzahlen** (eigene PLZ fuer
-    Behoerden, Hochschulen, Postfaecher) kennt kein Ortsverzeichnis -- die
-    Universitaet zu Koeln traegt 50923, und OpenPLZ antwortet darauf mit einer
-    leeren Liste. Dazu kommen 164 von 2.500 NRW-Bekanntmachungen ganz ohne PLZ.
-    Beides zusammen liess im ersten Lauf zehn Koelner und Duesseldorfer Verfahren
-    durch einen Brandenburg-Filter, obwohl sie eindeutig ausserhalb liegen.
-    Der Ortsname ist in 97 % der Faelle da und faengt genau diese Faelle.
+    Zwei Wege, und der zweite ist keine Bequemlichkeit: Die PLZ allein reicht
+    nicht. Großkunden-Postleitzahlen (eigene PLZ für Behörden, Hochschulen,
+    Postfächer) kennt kein Ortsverzeichnis; die Universität zu Köln trägt 50923,
+    und OpenPLZ antwortet darauf mit einer leeren Liste. Dazu kommen 164 von
+    2.500 NRW-Bekanntmachungen ganz ohne PLZ. Beides zusammen ließ im ersten
+    Lauf zehn Kölner und Düsseldorfer Verfahren durch einen Brandenburg-Filter,
+    obwohl sie eindeutig außerhalb liegen. Der Ortsname ist in 97 % der Fälle
+    da und fängt genau diese Fälle.
     """
     plz = (plz or "").strip()
     if plz.isdigit() and len(plz) == 5:
@@ -358,9 +356,11 @@ def filtere(c: sqlite3.Connection, cfg: dict, seit: str | None = None) -> list[d
     # wuerde die Region zuerst pruefen -- die Ergebnismenge ist dieselbe, aber
     # ohne diese Vorsortierung gaebe es je Lauf tausende Anfragen an eine fremde,
     # kostenlose API fuer Zeilen, die ohnehin durchfallen.
-    sr = cfg.get("suchraum", {})
-    praefixe = tuple(str(x).strip() for x in sr.get("cpv_codes", []))
-    muster = [m.lower() for m in sr.get("freitext_muster", [])]
+    # Mit Stufen (03.11.2026) zählen auch die Regelwörter und Stufen-CPV, sonst
+    # fiele „Restaurierung … Skulptur“ hier vor match() heraus. Ohne Stufen sind
+    # das genau cpv_codes und freitext_muster wie bisher.
+    praefixe = tuple(str(x).strip() for x in such_cpv(cfg))
+    muster = suchwoerter(cfg)
 
     treffer = []
     for z in zeilen:
@@ -398,11 +398,11 @@ def filtere(c: sqlite3.Connection, cfg: dict, seit: str | None = None) -> list[d
         m = match(k, cfg)
         if not m.get("hit"):
             continue
-        # 🔴 Der Hinweis muss in den KANDIDATEN, nicht nur in `_m`:
-        # store.record_hits speichert das Kandidaten-JSON und laesst `_m` fallen
-        # (nur der Punktwert wird uebernommen). Ein Warnhinweis, der nur in `_m`
-        # steht, erreicht das Portal also nie -- und dort wuerde ein Treffer mit
-        # unsicherem Ort wie ein gesicherter aussehen.
+        # Der Hinweis muss in den Kandidaten, nicht nur in `_m`: store.record_hits
+        # speichert das Kandidaten-JSON und lässt `_m` fallen (nur der Punktwert
+        # wird übernommen). Ein Warnhinweis, der nur in `_m` steht, erreicht das
+        # Portal also nie, und dort sähe ein Treffer mit unsicherem Ort wie ein
+        # gesicherter aus.
         if mehrdeutig:
             hinweis = (f"Ort nicht eindeutig: {z['ort'] or z['plz']} liegt in "
                        f"mehreren Bundeslaendern ({', '.join(nuts)}) — "
@@ -413,7 +413,7 @@ def filtere(c: sqlite3.Connection, cfg: dict, seit: str | None = None) -> list[d
             k["ort_unsicher"] = ("Leistungsort nicht bestimmbar (weder PLZ noch "
                                  "Ortsname auswertbar) — nicht verworfen")
             m.setdefault("flags", []).append("⚠ " + k["ort_unsicher"])
-        k["_m"] = m
+        treffer_uebernehmen(k, m)          # Stufe ins Kandidaten-JSON, sonst verliert sie der Speicher
         treffer.append(k)
     return treffer
 
@@ -515,7 +515,7 @@ def main() -> int:
                   file=sys.stderr)
         if a.db and treffer:
             store.record_hits(a.db, cfg["mandant"], pubday, treffer, jetzt)
-            # Trap 2: nachzaehlen statt Erfolg melden.
+            # Nachzählen statt Erfolg melden.
             with sqlite3.connect(a.db) as h:
                 n = h.execute(
                     "SELECT count(*) FROM hits WHERE mandant=? AND candidate LIKE ?",

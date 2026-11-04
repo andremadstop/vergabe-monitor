@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Vergabe-Monitor — Wächter: prüft jeden Tageslauf an seinen eigenen Zahlen (16.10.2026)
+Vergabe-Monitor: Wächter, prüft jeden Tageslauf an seinen eigenen Zahlen (16.10.2026)
 
 Warum: Zwei Fehler liefen wochenlang unbemerkt, obwohl sie in einfachen Zahlen
 sichtbar waren. Zuschläge kamen als Treffer durch (in zwei Profilen rund ein
@@ -42,8 +42,13 @@ from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
+# Die Regel für „schon vergeben“ kommt aus dem Monitor selbst (seit 03.11.2026 auch
+# „Vergebener Auftrag: …“ im Titel). Bis dahin stand hier eine Kopie, und die
+# Titelregel hätte nur der Monitor gekannt: die Spalte „durchgerutscht“ hätte
+# genau die Fälle nicht gezählt, für die sie gedacht ist.
+from vergabe_monitor import ist_schon_vergeben  # noqa: E402
+
 ORTSZEIT = ZoneInfo("Europe/Berlin")
-VERGEBEN_FORMTYPEN = {"result", "cont-modif", "dir-awa-pre"}
 KANAELE = {None: "Datenservice", "service.bund.de": "service.bund.de",
            "vmp-opendata": "Vergabemarktplätze"}
 MIN_VERLAUF = 5          # so viele vergleichbare Läufe, bevor Abweichungen gemeldet werden
@@ -52,9 +57,7 @@ MIN_N_ANTEIL = 10        # Anteile erst ab so vielen Treffern bewerten
 
 
 def _vergeben(k: dict) -> bool:
-    art = (k.get("procedure_type") or "").strip().lower()
-    return (k.get("form_type") in VERGEBEN_FORMTYPEN
-            or art.startswith("ex post") or "vergebener auftr" in art)
+    return ist_schon_vergeben(k)
 
 
 def kennzahlen(hits: Path, markt_dir: Path | None, raw: Path | None, tag: date) -> dict:

@@ -1,0 +1,25 @@
+cff-version: 1.2.0
+message: "Wenn Sie diese Software nutzen, zitieren Sie sie bitte mit diesen Angaben."
+type: software
+title: "Vergabe-Monitor (Import-Kern)"
+abstract: >-
+  Findet öffentliche Ausschreibungen, die zu einem Suchprofil passen. Holt täglich die
+  Bekanntmachungen des Datenservice Öffentlicher Einkauf (eForms), der Vergabemarktplätze
+  der Länder (Open-Data-Export) und von service.bund.de, führt sie auf Los-Ebene zusammen,
+  bewertet sie gegen Region (NUTS), CPV-Codes, Suchbegriffe, Auftragswert und Frist und
+  schreibt einen Bericht mit Begründung je Treffer. Ein Wächter prüft jeden Lauf an seinen
+  eigenen Zahlen.
+authors:
+  - given-names: André
+    family-names: Stiebitz
+    affiliation: "Stiebitz Souverain Systems UG (haftungsbeschränkt)"
+repository-code: "https://github.com/andremadstop/vergabe-monitor"
+license: EUPL-1.2
+date-released: "2026-10-31"
+keywords:
+  - Vergabe
+  - Ausschreibungen
+  - eForms
+  - Open Data
+  - Datenservice Öffentlicher Einkauf
+  - Public Procurement

@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """
-Vergabe-Monitor — Detail-Anreicherung je Treffer
+Vergabe-Monitor: Detail-Anreicherung je Treffer
 
 Das CSV (Kern-Filter) ist die Kurzfassung. Für Fristen und Details holt dieses
-Modul den REICHEN Datensatz einer einzelnen Bekanntmachung — on demand, nur für
+Modul den vollen Datensatz einer einzelnen Bekanntmachung, auf Abruf, nur für
 Treffer, die es wert sind (nicht für den ganzen Tag).
 
 Zwei Quellen desselben offenen API-Endpunkts (kein Account, DL-DE 2.0):
   OCDS-JSON   → Vergabeunterlagen-Link, Vertragslaufzeit, alle Lose, Kontakt
-  eForms-XML  → exakte Angebotsfrist + Nachfragefrist (im CSV/OCDS NICHT enthalten)
+  eForms-XML  → exakte Angebotsfrist + Nachfragefrist (im CSV/OCDS nicht enthalten)
 
 Tagespakete werden in raw/ gecacht (wie im Kern), also 1 Download je Tag/Format.
 """

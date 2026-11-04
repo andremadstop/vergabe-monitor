@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Vergabe-Monitor — Treffer-Speicher (SQLite)
+Vergabe-Monitor: Treffer-Speicher (SQLite)
 
 Damit ein Treffer aus der Liste später per Kurz-ID („a1b2") wieder auffindbar
-ist, hält dieser Speicher jeden gemeldeten Treffer fest — inklusive des
+ist, hält dieser Speicher jeden gemeldeten Treffer fest, inklusive des
 vollständigen Kandidaten-JSON, damit Details ohne erneutes Parsen des
 Tagespakets bereitstehen.
 
@@ -11,13 +11,13 @@ Kurz-ID = 4 Zeichen base36 aus notice_id+lot_id → stabil (gleicher Treffer =
 gleiche ID, keine Doppel) und von Hand tippbar. Kein Secret, DB liegt in
 raw/ (gitignored).
 
-🔴 Der Schlüssel ist (mandant, short_id), nicht short_id allein. Die Kurz-ID
-kennt den Mandanten nicht — mit ihr als alleinigem Primärschlüssel bekam
-denselben Treffer nur der Mandant, dessen Lauf zuerst lief; jeder weitere fiel
-still durch INSERT OR IGNORE. Gefunden 21.08.2026: ein frischer Lauf mit
-75 Treffern schrieb null Zeilen, weil dieselben Lose schon unter der alten
-Config standen. Dass zwei Mandanten dieselbe Ausschreibung treffen, ist der
-Normalfall — bei Vermessung und Fassade sogar der interessante.
+Der Schlüssel ist (mandant, short_id), nicht short_id allein. Die Kurz-ID kennt
+den Mandanten nicht; mit ihr als alleinigem Primärschlüssel bekam denselben
+Treffer nur der Mandant, dessen Lauf zuerst lief, jeder weitere fiel still
+durch INSERT OR IGNORE. Gefunden 21.08.2026: ein frischer Lauf mit 75 Treffern
+schrieb null Zeilen, weil dieselben Lose schon unter der alten Config standen.
+Dass zwei Mandanten dieselbe Ausschreibung treffen, ist der Normalfall, bei
+Vermessung und Fassade sogar der interessante.
 """
 
 from __future__ import annotations
@@ -104,7 +104,7 @@ def record_hits(db: Path, mandant: str, pubday: str, hits: list[dict],
             # INSERT OR IGNORE allein blieben die alten Zeilen stehen, und ein
             # Treffer ohne Frist bliebe fuer immer einer ohne Frist.
             #
-            # first_seen und dossier_built werden bewusst NICHT angefasst: wann
+            # first_seen und dossier_built werden bewusst nicht angefasst: wann
             # ein Treffer zuerst auffiel und ob schon ein Dossier existiert,
             # weiss der neue Lauf nicht besser.
             c.execute(

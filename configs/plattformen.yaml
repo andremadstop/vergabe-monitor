@@ -1,14 +1,13 @@
-# Vergabemarktplätze der Länder — Quellenliste für den unterschwelligen Kanal
+# Vergabemarktplätze der Länder: Quellenliste für den unterschwelligen Kanal
 #
 # Erhoben am 21.08.2026 durch direkten Abruf der Plattformen (Softwarekennung über
 # Pfadsignatur und Seiteninhalt) und eine Vollsuche auf GovData, dem Katalog, in
 # dem Bund und Länder ihre offenen Daten führen.
 #
-# 🔑 DER BEFUND, der den Zuschnitt bestimmt:
-#    Die Landschaft ist **anbieterkonzentriert, nicht länderkonzentriert.**
-#    Drei Softwarefamilien decken praktisch alles ab. Damit ist die Frage nach
-#    einer Schnittstelle keine 16-fache, sondern eine 3-fache — und für eine der
-#    drei ist der Mechanismus bereits dokumentiert.
+# Befund, der den Zuschnitt bestimmt: Die Landschaft ist anbieterkonzentriert,
+# nicht länderkonzentriert. Drei Softwarefamilien decken praktisch alles ab.
+# Die Frage nach einer Schnittstelle stellt sich also nicht sechzehnmal, sondern
+# dreimal, und für eine der drei ist der Mechanismus bereits dokumentiert.
 #
 # Legende status:
 #   offen      = Daten sind heute abrufbar, ohne Rückfrage
@@ -18,11 +17,11 @@
 #                eine Frage an den Anbieter. "Nicht gefunden" ist nicht "gibt es nicht".
 #   im_bund    = läuft bereits über den Datenservice, braucht keinen eigenen Kanal
 
-# --- HEUTE ABRUFBAR ---------------------------------------------------------
+# --- Heute abrufbar ----------------------------------------------------------
 # Sieben Endpunkte, alle unter Datenlizenz Deutschland Zero 2.0 (gemeinfrei,
 # gewerblich nutzbar, ohne Namensnennung). Tägliches ZIP, EU + national.
-# ⚠ Das Archiv wird nachts überschrieben — eine Historie entsteht erst ab dem
-#   Tag, an dem der Abruf läuft. Deshalb ist "später anschließen" nicht gratis.
+# Das Archiv wird nachts überschrieben; eine Historie entsteht erst ab dem Tag,
+# an dem der Abruf läuft. Deshalb ist "später anschließen" nicht gratis.
 quellen:
   - land: Nordrhein-Westfalen
     name: Vergabemarktplatz NRW (Land)
@@ -66,7 +65,7 @@ quellen:
     status: offen
     url: "https://www.vergaben-wirtschaftsregion-aachen.de/VMPSatellite/opendata?id=1ec5f6d2-e483-4de9-9d24-6517b091abb1"
 
-# --- EIN SCHALTER FEHLT, SONST NICHTS ---------------------------------------
+# --- Nur ein Schalter fehlt --------------------------------------------------
 # cosinex-Installationen ohne konfigurierte Zugriffs-ID. Der Mechanismus steht in
 # cosinex' eigener Produktdoku: "Die ID muss von der jeweiligen Verfahrens-
 # betreuung der Installation konfiguriert werden." Also eine Anfrage, kein Bau.
@@ -76,7 +75,7 @@ quellen:
     status: schalter
     basis: "https://vergabemarktplatz.brandenburg.de"
     hinweis: >
-      robots.txt sagt "Disallow: /" für alle Agenten — die Plattform wird deshalb
+      robots.txt sagt "Disallow: /" für alle Agenten; die Plattform wird deshalb
       nicht abgerufen. Der Open-Data-Weg ist der einzige saubere; dafür müsste die
       Verfahrensbetreuung die Zugriffs-ID freischalten.
 
@@ -88,7 +87,7 @@ quellen:
     hinweis: >
       Am 21.08. neu gefunden: dieselbe Software wie NRW und Brandenburg
       (VMPCenter/VMPSatellite). /VMPSatellite/opendata leitet ohne ID auf die
-      Startseite um — der Endpunkt existiert, die ID ist nicht vergeben.
+      Startseite um: Der Endpunkt existiert, die ID ist nicht vergeben.
 
   - land: überregional
     name: Deutsches Vergabeportal (DTVP)
@@ -98,12 +97,12 @@ quellen:
     hinweis: >
       Kein Land, sondern cosinex' eigenes gehostetes Portal, das viele
       Vergabestellen quer über die Länder nutzen. Wenn irgendwo ein einzelner
-      Schalter viel bewegt, dann hier — der Adressat wäre cosinex selbst.
+      Schalter viel bewegt, dann hier; der Adressat wäre cosinex selbst.
 
-# --- ANBIETER UNBEKANNT VERMESSEN, SCHNITTSTELLE NICHT GEFUNDEN -------------
+# --- Anbieter ermittelt oder unbekannt, Schnittstelle nicht gefunden ---------
 # Für keine dieser Plattformen liegt ein Datensatz auf GovData, und keine
 # dokumentiert öffentlich eine Open-Data-Schnittstelle. Das ist ein "nicht
-# gefunden", kein "existiert nicht" — die Frage geht an den Anbieter, und weil
+# gefunden", kein "existiert nicht"; die Frage geht an den Anbieter, und weil
 # sich die Anbieter wiederholen, sind es wenige Fragen.
   - land: Berlin
     name: Vergabeplattform des Landes Berlin
@@ -111,8 +110,8 @@ quellen:
     status: unbekannt
     basis: "https://www.berlin.de/vergabeplattform/"
     hinweis: >
-      🔴 NICHT cosinex — der Schalter-Hebel greift hier nicht. robots.txt
-      "Disallow: /", wird deshalb nicht abgerufen.
+      Nicht cosinex, der Schalter-Weg greift hier also nicht. robots.txt sagt
+      "Disallow: /", die Plattform wird deshalb nicht abgerufen.
 
   - land: Baden-Württemberg
     name: vergabe24
@@ -127,7 +126,7 @@ quellen:
     basis: "https://vergabe.saarland/NetServer/"
     hinweis: >
       Belegt an der Seite selbst: sie nennt "Administration Intelligence AG".
-      Damit ist die Pfadsignatur /NetServer/ dem Anbieter zugeordnet — und die
+      Damit ist die Pfadsignatur /NetServer/ dem Anbieter zugeordnet, und die
       drei folgenden Länder tragen dieselbe Signatur.
 
   - land: Hessen
@@ -171,7 +170,7 @@ quellen:
     software: nicht bestimmt
     status: unbekannt
     basis: "https://vergabe.niedersachsen.de"
-    hinweis: "Antwortete beim Abruf am 21.08. nicht — erneut prüfen, nicht als 'gibt es nicht' werten."
+    hinweis: "Antwortete beim Abruf am 21.08. nicht; erneut prüfen, nicht als 'gibt es nicht' werten."
 
   - land: Hamburg
     name: Vergabeportal Hamburg
@@ -187,7 +186,7 @@ quellen:
     basis: null
     hinweis: "Kandidaten-Adressen antworteten nicht; die richtige Adresse ist noch zu ermitteln."
 
-# --- BRAUCHT KEINEN EIGENEN KANAL -------------------------------------------
+# --- Braucht keinen eigenen Kanal --------------------------------------------
   - land: Bremen
     name: Vergabe@Net Bremen
     software: Administration Intelligence AG
@@ -195,4 +194,4 @@ quellen:
     basis: "https://vergabe.bremen.de"
     hinweis: >
       Bremen liefert unterschwellig bereits an den Datenservice Öffentlicher
-      Einkauf — der Monitor hat diese Bekanntmachungen also schon.
+      Einkauf; der Monitor hat diese Bekanntmachungen also schon.
